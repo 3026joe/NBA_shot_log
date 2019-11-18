@@ -1,0 +1,64 @@
+---
+title: "NBA Player Statistics"
+output: html_notebook
+---
+#Importing the dataset
+```{r}
+season_stats <- read.csv("Seasons_Stats.csv")
+View(season_stats)
+```
+
+#Choosing relevant data
+This dataset has too many records and features, so we will choose the ones most relevant to what we need.
+We'll be using the following columns:
+* `Player`: Name of the player.    
+ 
+ * `Pos`: Position of the player. It can be one of the following 5: PG, SG, SF, PF, C, or a combination of those.     
+ 
+ * `Age`: Age of the player.    
+ 
+ * `Tm`: Team of the player.  
+ 
+ * `G`: Games played by the player on that season.     
+ 
+ * `GS`: Games started by the player on that season, i.e., games where the player was on the starting line-up.  
+ 
+ * `MPG`: Minutes Played per game.  
+ 
+ * `PPG`: Points scored per game.  
+ 
+ * `APG`: Assists made per game.   
+ 
+ * `RPG`: Rebounds per game.   
+ 
+ * `SPG`: Steals per game.
+ 
+ * `BPG`:  Blocks per game.
+ 
+ * `TOPG`: Turnovers per game.
+ 
+ * `PFPG`:  Personal fouls per game.
+ 
+ * `PER`:  Player Efficiency Rating (available since the 1951-52 season); PER is a rating developed by ESPN.com columnist John Hollinger. In John's words, "The PER sums up all a player's positive accomplishments, subtracts the negative accomplishments, and returns a per-minute rating of a player's performance."  
+ 
+ * `TS.`: TS%, True Shooting Percentage, a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.   
+
+<!-- *`X3PAr`:  3-Point Field Goal Attempts (available since the 1979-80 season in the NBA). -->
+  
+ * `USG.`: Usage Percentage (available since the 1977-78 season in the NBA). Usage percentage is an estimate of the percentage of team plays used by a player while he was on the floor.   
+   
+ * `WS`: an estimate of the number of wins contributed by a player.      
+   
+ * `VORP`: Value Over Replacement Player (available since the 1973-74 season in the NBA); a box score estimate of the points per 100 TEAM possessions that a player contributed above a replacement-level (-2.0) player, translated to an average team and prorated to an 82-game season   
+   
+ * `FG.`: Field Goal Percentage. 
+ 
+ * `X2P.`: 2-Point Field Goal Percentage.  
+ 
+ * `X3P.`: 3-Point Field Goal Percentage (available since the 1979-80 season in the NBA).   
+ 
+ <!-- *`X3PA`: 3-Point Field Goal Attempts (available since the 1979-80 season in the NBA).      -->
+```{r}
+
+```
+

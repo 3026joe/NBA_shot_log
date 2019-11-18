@@ -290,7 +290,7 @@ season_stats_2017 <- season_stats_2017 %>%
 ## Join the two tables
 Finally, we can create the table that resulsts from the union of the stats of 2017 table and the 2017 salaries.
 
-```{r, warning=FALSE}
+```{r}
 # join stats with salaries: join by player and team to avoid duplicities of players
 salaries_2017_join <- salaries_2017 %>% 
   select(c(Player.Name, Team, Salary.in..))
@@ -524,7 +524,7 @@ The teams value more the points and the minutes, rather than some advanced metri
 Let's compute the correlation between salaries and FG.(field goal %) to check if the players who are getting paid the most are also the ones who shoot more efficiently.
 
 ```{r}
-cor.test(subset$FG., subset$Salary.in.., method = 'spearman',  exact=F)
+cor.test(subset$FG., subset$Salary.in.., method = 'spearman')
 ```
 
 The correlation is not so high, so being an efficient scorer seems not to be highly correlated with a higher salary.
@@ -598,7 +598,7 @@ View(head(group.C))
 
 ### Analysis planification
 
-We are going to study if there are any significative differences in the following variables, depending on the position of the player:
+We are going to study if there are any significant differences in the following variables, depending on the position of the player:
 
 * Salary  
 * Points per Game  
@@ -613,21 +613,21 @@ First of all, we must check if each of those variables are normally distributed 
 #### Salary
 ```{r}
 # normality test
-shapiro.test(subset2$Salary.in..)
+#shapiro.test(subset2$Salary.in..)
 ```
 
 
 ```{r}
 # homocedasticity test
-View(leveneTest(Salary.in..  ~ Pos, data = subset2))
+#View(leveneTest(Salary.in..  ~ Pos, data = subset2))
 ```
 
 
 The variable is normally distributed, but there is no homocedasticity. Thus, we will apply the Kruskal-Wallis test to see if there are any differences with respect to the Salary by position.
 
 ```{r}
-test_salary <- kruskal.test(Salary.in..~ Pos, data= subset2)
-test_salary
+#test_salary <- kruskal.test(Salary.in..~ Pos, data= subset2)
+#test_salary
 ```
 
 There is no evidence that there exist a difference on the salary by the different position that a player has.
@@ -638,20 +638,20 @@ There is no evidence that there exist a difference on the salary by the differen
 #### PPG
 ```{r}
 # normality test
-shapiro.test(subset2$PPG)
+#shapiro.test(subset2$PPG)
 ```
 
 ```{r}
 # homocedasticity test
-View(leveneTest(PPG  ~ Pos, data = subset2))
+#View(leveneTest(PPG  ~ Pos, data = subset2))
 ```
 
 
 The variable is normally distributed, but there is no homocedasticity. Thus, we will apply the Kruskal-Wallis test to see if there are any differences with respect to the PPG by position.
 
 ```{r}
-test_PPG <-  kruskal.test(PPG~ Pos, data= subset2)
-test_PPG
+#test_PPG <-  kruskal.test(PPG~ Pos, data= subset2)
+#test_PPG
 ```
 
 After running the test, no evidence was found that the PPG change significatively according to the player's position on the field.
@@ -662,21 +662,21 @@ After running the test, no evidence was found that the PPG change significativel
 #### APG
 ```{r}
 # diferencias en APG
-shapiro.test(subset2$APG)
+#shapiro.test(subset2$APG)
 ```
 
 ```{r}
 # homocedasticity test
-View(leveneTest(APG  ~ Pos, data = subset2))
+#View(leveneTest(APG  ~ Pos, data = subset2))
 ```
 
 The variable is normally distributed and there is homocedasticity, so we can apply the ANOVA test to see if there are any differences with respect to the APG by position.
 
 ```{r}
 # normal--- we can do the anova test
-test_APG <- aov(APG~ Pos, data= subset2)
-summary(test_APG)
-summary(test_APG)[[1]]$'Pr(>F)'[1]
+#test_APG <- aov(APG~ Pos, data= subset2)
+#summary(test_APG)
+#summary(test_APG)[[1]]$'Pr(>F)'[1]
 ```
 
 In this case, the Assists per Game depend on the position that the player has on the field. The p-value is really small (less than $10^{-16}$).
@@ -689,19 +689,19 @@ Later, we will explore which of the possitions has a higher number of APG.
 
 ```{r}
 # normality test
-shapiro.test(subset2$MPG)
+#shapiro.test(subset2$MPG)
 ```
 
 ```{r}
 # homocedasticity test
-leveneTest(MPG  ~ Pos, data = subset2)
+#leveneTest(MPG  ~ Pos, data = subset2)
 ```
 
 The variable is normally distributed, but there is no homocedasticity. Thus, we will apply the Kruskal-Wallis test to see if there are any differences with respect to the MPG by position.
 
 ```{r}
-test_MPG <- kruskal.test(MPG~ Pos, data= subset2)
-test_MPG
+#test_MPG <- kruskal.test(MPG~ Pos, data= subset2)
+#test_MPG
 ```
 
 In the case of the MPG, we found that there is evidence to support the claim that the minutes played depend on the position. In this case, the p-value is still small (in the order of $10^{-3}$).
@@ -711,19 +711,19 @@ In the case of the MPG, we found that there is evidence to support the claim tha
 #### WS
 ```{r}
 # normality test
-shapiro.test(subset2$WS)
+#shapiro.test(subset2$WS)
 ```
 
 ```{r}
-View(leveneTest(WS  ~ Pos, data = subset2))
+#View(leveneTest(WS  ~ Pos, data = subset2))
 ```
 
 The variable is normally distributed and there is homocedasticity, so we can apply the ANOVA test to see if there are any differences with respect to the WS by position.
 
 ```{r}
 # normal--- we can do the anova test
-test_WS <- aov(WS~ Pos, data= subset2)
-summary(test_WS)
+#test_WS <- aov(WS~ Pos, data= subset2)
+#summary(test_WS)
 ```
 
 In this case, the WS also have some dependence on the position played, but the p-value was closer to the significance level ($0.009$) than in the other two variables, meaning that further investigations should be made in order to determine whether there is a true effect or just a result of chance.
@@ -735,20 +735,20 @@ In this case, the WS also have some dependence on the position played, but the p
 Let us see a summary of the results of the analyses.
 
 ```{r}
-DT = data.frame(
-  Variable = c("Salary","PPG","APG","MPG","WS"),
-  Result = c("No significative difference observed",
-             "No significative difference observed",
-             "Significative difference",
-             "Significative difference",
-             "Significative difference"),
-  p.value = c(sprintf("%0.3f", test_salary$p.value),
-            sprintf("%0.3f", test_PPG$p.value),
-            sprintf("%0.2e", summary(test_APG)[[1]]$'Pr(>F)'[1]),
-            sprintf("%0.2e", test_MPG$p.value),
-            sprintf("%0.3f", summary(test_WS)[[1]]$'Pr(>F)'[1]))
-)
-View(DT)
+#DT = data.frame(
+#  Variable = c("Salary","PPG","APG","MPG","WS"),
+#  Result = c("No significative difference observed",
+#             "No significative difference observed",
+#             "Significative difference",
+#             "Significative difference",
+#             "Significative difference"),
+#  p.value = c(sprintf("%0.3f", test_salary$p.value),
+#            sprintf("%0.3f", test_PPG$p.value),
+#            sprintf("%0.2e", summary(test_APG)[[1]]$'Pr(>F)'[1]),
+#            sprintf("%0.2e", test_MPG$p.value),
+#            sprintf("%0.3f", summary(test_WS)[[1]]$'Pr(>F)'[1]))
+#)
+#View(DT)
 ```
 
 
@@ -760,10 +760,10 @@ Now, let us check the source of the differences in the variables WS, APG and MPG
 
 ```{r}
 # WS
-summary(lm(WS ~ Pos, data = subset2))
+#summary(lm(WS ~ Pos, data = subset2))
 ```
 
-```{r , fig.width = 3.5, fig.height = 3}
+```{r}
 subset2 %>% 
   ggplot(aes(x = Pos, y = WS)) + 
   geom_boxplot()+
@@ -780,12 +780,12 @@ It seems that the positions with the higher WS are the Centers, followed by the 
 
 ```{r}
 # APG
-summary(lm(APG ~ Pos, data = subset2))
+#summary(lm(APG ~ Pos, data = subset2))
 ```
 
 We can plot those differences in a boxplot:
 
-```{r, fig.width = 3.5, fig.height = 3}
+```{r}
 subset2 %>% 
   ggplot(aes(x = Pos , y = APG)) + 
   geom_boxplot()+
@@ -809,10 +809,10 @@ Let us repeat the analysis for the MPG attribute.
 
 ```{r}
 # MPG
-summary(lm(MPG ~ Pos, data = subset2))
+#summary(lm(MPG ~ Pos, data = subset2))
 ```
 
-```{r , fig.width = 3.5, fig.height = 3}
+```{r}
 subset2 %>% 
   ggplot(aes(x = Pos, y = MPG)) + 
   geom_boxplot()+
@@ -858,7 +858,7 @@ We see that some of the variables that seem to explain better the salary are the
 
 Let us create a plot to see how the variables with the most significant p-value from the previous output (those are: PPG, MPG, RPG, GS, PFPG and AGE) are related to the Salary. The following code gives the desired plot.
 
-```{r ,message=FALSE, warning=FALSE}
+```{r}
 # Salary vs PPG
 p1 <- ggplot(subset, aes(x=Salary.in.., y=PPG)) +
   geom_point(alpha=0.5) + geom_smooth() +
@@ -1026,7 +1026,7 @@ To make this test, we will choose the following players:
 
 To make the predictions, we will use the model named `model6`, as it was the one with the higher adjusted R squared of all the models built in the previous section.
 
-```{r, warning=FALSE}
+```{r}
 griffin <- subset %>% filter(Player == 'Blake Griffin')
 # predicted salary
 pred_griffin <- predict(model6, griffin)
@@ -1056,7 +1056,7 @@ preds_model6 <- c(pred_griffin, pred_hill, pred_redick,
 Now we can compare those predictions with the actual salaries those players got in that season. These values are included in the `salaries` dataset. We extract that information and compare the predictions with the true values in the following lines of code.
 
 
-```{r, warning=FALSE}
+```{r}
 player_names <- c('Blake Griffin', 'Stephen Curry', 'Kyle Lowry', 
              'George Hill', 'Serge Ibaka', 'Pau Gasol', 'J.J. Redick' )
 # see the filtered players

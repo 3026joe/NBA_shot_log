@@ -1,6 +1,12 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+    html_document:
+        toc: yes
+        theme: spacelab
+        highlight: tango
+        df_print: paged
+        code_folding: hide
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -565,4 +571,105 @@ model5 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+ Age*MPG +
 model6 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+  I(PFPG)^2+ 
                Age*MPG + Pos + I(RPG)^2 + TS. + I(GS)^2 + APG*TOPG+ 
                USG.*TOPG + VORP + WS, data=subset3)
+```
+
+```{r}
+models.table <- 
+  data.frame(c(1, 2, 3 ,4 ,5, 6),
+                           c(summary(model1)$adj.r.squared,
+                             summary(model2)$adj.r.squared,
+                             summary(model3)$adj.r.squared,
+                             summary(model4)$adj.r.squared,
+                             summary(model5)$adj.r.squared,
+                             summary(model6)$adj.r.squared),
+                           c(summary(model1)$fstatistic[1],
+                             summary(model2)$fstatistic[1],
+                             summary(model3)$fstatistic[1],
+                             summary(model4)$fstatistic[1],
+                             summary(model5)$fstatistic[1],
+                             summary(model6)$fstatistic[1]))
+names(models.table) <- c("Model", "Adj. R-squared", "F-statistic")
+
+View(models.table)
+```
+
+It seems that the model number 6 has the highest adjusted R-squared, so that is the one that we will use.
+
+Data visualizations
+
+In this section, some data visualizations are included, aiming to answer some small questions about the evolution of the league in the last years.
+
+
+## How many points were scored each season through the NBA history?
+
+```{r}
+# group points by year
+points_by_year <- season_stats %>% 
+  group_by(Year) %>% 
+  summarise(total = sum(PTS))
+str(points_by_year)
+
+points_by_year %>% 
+  ggplot(aes(Year, total)) + 
+  geom_point()+ 
+  geom_smooth()+ 
+  theme_classic()+
+  scale_y_continuous(breaks = c(50000, 100000,
+                                150000, 200000,
+                                250000, 300000),
+                     labels = c("50k", "100k", "150k", 
+                                "200k", "250k", "300k"))+  
+  ggtitle('Evolution in points scored per season') +
+  labs(subtitle = "The number of points scored has increased")+
+  ylab("Total points scored per season (in thousand points)")
+```
+
+Which are the teams that spent the most money on players' salaries?
+
+```{r}
+### averaged salaries grouped by teams -----------
+library(tidyverse)
+champions_list <- c("LAL", "CLE", "DET", "GSW", "BOS", 
+                    "MIA", "CHI", "SAS", "HOU", "DAL")
+n_seasons_salaries <- n_distinct(salaries$Season.Start)
+salaries_by_team <- salaries %>% group_by(Team) %>% 
+  summarise(total = sum(Salary.in..), avg = sum(Salary.in..)/n_seasons_salaries) %>%
+  mutate(highlight_flag = ifelse(Team %in% champions_list, T, F))
+# plot: champion teams are displayed in red colour 
+salaries_by_team %>% 
+  ggplot(aes(x = reorder(Team, avg), avg)) + 
+  geom_bar(stat = "identity", 
+           aes(fill = highlight_flag)) +
+  scale_fill_manual(values = c('#595959', 'red')) +
+  theme_classic() +
+  ggtitle('Average money spent on salaries by each team (from 1990 to 2017)') +
+  labs(subtitle = "Spending more money does not guarantee championships") + 
+  theme(axis.text.y = element_text(size=8),
+        axis.text.x = element_text(size=10),
+        legend.position = 'none') +
+  scale_y_continuous(breaks = c(20000000, 40000000, 60000000),
+                     labels = c("$20M", "$40M", "$60M"))+
+  ylab("Avg. money spent on salary per season (in $M)") +
+  xlab("Team (champion teams are highlighted in red)")+
+  coord_flip()
+                     
+```
+
+Was there an evolution in the number of three point attempts through the NBA history?
+```{r}
+## evolution of 3pts attemps though the years------------------------
+# group 3 pts by year :after 1982, when first collected data
+threes_att_by_year <- season_stats %>% filter(Year>1982) %>%
+  group_by(Year) %>% 
+  summarise(total = sum(X3PA))
+str(threes_att_by_year)
+# plot; geom_smooth options: method = "lm", se = FALSE
+threes_att_by_year %>% ggplot(aes(Year, total)) + 
+  geom_point()+ geom_smooth()+ 
+  #geom_bar(stat = "identity") + 
+  scale_y_continuous(breaks = c(20000, 40000,
+                                60000, 80000))+  
+  ggtitle('Evolution in three pointers attempted by year') +
+  theme_classic()+
+  ylab('Total 3pt attempts')
 ```

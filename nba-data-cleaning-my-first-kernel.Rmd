@@ -1,6 +1,6 @@
 ---
-title: "Data cleaning project"
-author: "Ricard Trinchet Arnejo"
+title: "NBA Player Dataset"
+author: "Joseph Dominic"
 output:
     html_document:
         toc: yes

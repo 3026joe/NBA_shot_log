@@ -1,13 +1,6 @@
 ---
 title: "R Notebook"
-author: "Joseph Dominic"
-output:
-    html_document:
-        toc: yes
-        theme: spacelab
-        highlight: tango
-        df_print: paged
-        code_folding: hide
+output: html_notebook
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -347,3 +340,229 @@ subset2 <- stats_with_salaries %>%
 We select the five analysis groups, i.e., the five types of players in the game. 
 Let us see a sample of these groups.
 
+PG
+```{r}
+group.PG <- subset2 %>%  filter(Pos == 'PG')
+View(head(group.PG))
+```
+
+SG
+
+```{r}
+group.SG <- subset2 %>%  filter(Pos == 'SG')
+View(head(group.SG))
+```
+
+SF
+
+```{r}
+group.SF <- subset2 %>%  filter(Pos == 'SF')
+View(head(group.SF))
+```
+
+PF
+
+```{r}
+group.PF <- subset2 %>%  filter(Pos == 'PF')
+View(head(group.PF))
+```
+
+C
+
+```{r}
+group.C <- subset2 %>%  filter(Pos == 'C')
+View(head(group.C))
+```
+
+Analysis planning
+
+We are going to study if there are any significant differences in the following variables, depending on the position of the player:
+
+* Salary  
+* Points per Game  
+* Assists per Game  
+* Minutes per Game  
+* Win shares
+
+
+Comparing stats for different positions
+
+WS
+
+```{r}
+subset2 %>% 
+  ggplot(aes(x = Pos, y = WS)) + 
+  geom_boxplot()+
+  theme_classic()
+```
+
+APG
+
+```{r}
+subset2 %>% 
+  ggplot(aes(x = Pos , y = APG)) + 
+  geom_boxplot()+
+  theme_classic()
+```
+
+MPG
+
+```{r}
+subset2 %>% 
+  ggplot(aes(x = Pos, y = MPG)) + 
+  geom_boxplot()+
+  theme_classic()
+```
+
+It seems that the Small Forwards are getting more minutes per game. Let us see how many players are in the league for every position in the 2016-17 season.
+
+```{r}
+summary(subset$Pos)
+```
+
+We see that the SF is the position with less players, which can be the reason that is the position with the higher MPG.
+
+
+Salary prediction model
+
+We are going to use the following subset of variables to predict the salary:
+
+```{r}
+subset3 <- subset %>%
+  select(-c(Tm, Player))
+names(subset3)
+```
+
+Models creation
+Let us create different models and compare their adjusted R-squared as an indicator of which model will make a better adjustment to the data.
+
+Let us first use a model which uses all the variables in the subset. Let us display the summary and make some comments about it.
+
+```{r}
+#All variables
+model1 <- lm(Salary.in.. ~ ., 
+             data=subset3)
+summary(model1)
+```
+
+We see that some of the variables that seem to explain better the salary are the Position, the Games Started, PPG, RPG and PFPG.
+
+Let us create a plot to see how the variables with the most significant p-value from the previous output (those are: PPG, MPG, RPG, GS, PFPG and AGE) are related to the Salary.
+
+```{r}
+# Salary vs PPG
+p1 <- ggplot(subset, aes(x=Salary.in.., y=PPG)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y="Points PG") +
+  theme(legend.position="none") +
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Salary vs MPG
+p2 <- ggplot(subset, aes(x=Salary.in.., y=MPG)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y="Minutes PG") +
+  theme(legend.position="none")+
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Salary vs GS
+p3 <- ggplot(subset, aes(x=Salary.in.., y=GS)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y="Games Started") +
+  theme(legend.position="none")+
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Salary vs PFPG
+p4 <- ggplot(subset, aes(x=Salary.in.., y=PFPG)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y="Personal Fouls PG") +
+  theme(legend.position="none")+
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Salary vs RPG
+p5 <- ggplot(subset, aes(x=Salary.in.., y=RPG)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y= "Rebounds PG") +
+  theme(legend.position="none")+
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Salary vs Age
+p6 <- ggplot(subset, aes(x=Salary.in.., y=Age)) +
+  geom_point(alpha=0.5) + geom_smooth() +
+  labs(x="Salary", y="Age") +
+  scale_x_continuous(breaks = c(100000, 10000000,
+                                20000000, 30000000),
+                     labels = c("$1M", "$10M",
+                                "$20M", "$30M"))+
+  theme_classic() +
+  theme(
+    plot.margin = margin(3, 7, 3, 1.5)
+  )
+# Represent all the subplots 
+grid.arrange(p1, p2, p3, p4, p5, p6,
+             layout_matrix=cbind(c(1,4), c(2,5), c(3,6)), 
+             top = textGrob("Predictors related to the Salary",
+                            gp=gpar(fontsize=20,font=3)))
+```
+
+It seems that the variables whose correlation is more clear with the salary are MPG, PPG and GS.
+
+Let us build some more linear regression models. Then, we will select the better performing one.
+
+```{r}
+model2 <- lm(Salary.in.. ~ APG + RPG + PPG + Age + BPG + MPG*PPG 
+             + Age*MPG, 
+             data=subset3)
+```
+
+```{r}
+model3 <- lm(Salary.in.. ~ MPG +  RPG + Age + BPG + MPG*PPG + Age*MPG,
+             data=subset3)
+```
+
+```{r}
+model4 <- lm(Salary.in.. ~  Age*MPG + WS + TOPG + PFPG + GS,
+             data=subset3)
+```
+
+
+```{r}
+model5 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+ Age*MPG +
+               Pos + RPG + TS. + GS + APG*TOPG+ USG.,
+             data=subset3)
+```
+
+```{r}
+model6 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+  I(PFPG)^2+ 
+               Age*MPG + Pos + I(RPG)^2 + TS. + I(GS)^2 + APG*TOPG+ 
+               USG.*TOPG + VORP + WS, data=subset3)
+```

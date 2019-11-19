@@ -55,13 +55,14 @@ salaries <- data.frame(read_excel("Player - Salaries per Year (1990 - 2017).xlsx
 # Dataset description
 
 The first dataset has 24691 observations each one with 53 variables.
+The second one, contains 11837 observations of  7 variables.
 
-That amount of data is too big for the purpose of this analysis, so we will reduce the dimensions of both datasets.
+That amount of data is too big for the purpose of this analysis, so we will reduce the dimensions of both datasets. The idea is to join both datasets to get a full dataset with player stats and salaries. After that, we will select only the data from the 2016-17 season. We will also use the salaries of the 2017-18 season.
 
 The remaining data will not be considered in the main analyses, though in the last section, it will be used to make some visualizations.
 
 
-Also, some variable selection will be made. We will choose 23 of the variables from the dataset.
+Also, some variable selection will be made. We will choose 23 of the variables from the first dataset and only one from the second.
 
 The selected variables are the following. From the first dataset:
  <!-- * `X`: Number of column in the dataset   -->

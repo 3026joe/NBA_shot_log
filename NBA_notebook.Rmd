@@ -1,64 +1,342 @@
 ---
-title: "NBA Player Statistics"
+title: "R Notebook"
 output: html_notebook
 ---
-#Importing the dataset
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Importing the required libraries
 ```{r}
-season_stats <- read.csv("Seasons_Stats.csv")
-View(season_stats)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(ggthemes)
+library(stringr)
+library(VIM)
+library(car)
+library(gridExtra)
 ```
 
-#Choosing relevant data
-This dataset has too many records and features, so we will choose the ones most relevant to what we need.
-We'll be using the following columns:
-* `Player`: Name of the player.    
- 
- * `Pos`: Position of the player. It can be one of the following 5: PG, SG, SF, PF, C, or a combination of those.     
- 
- * `Age`: Age of the player.    
- 
- * `Tm`: Team of the player.  
- 
- * `G`: Games played by the player on that season.     
- 
- * `GS`: Games started by the player on that season, i.e., games where the player was on the starting line-up.  
- 
- * `MPG`: Minutes Played per game.  
- 
- * `PPG`: Points scored per game.  
- 
- * `APG`: Assists made per game.   
- 
- * `RPG`: Rebounds per game.   
- 
- * `SPG`: Steals per game.
- 
- * `BPG`:  Blocks per game.
- 
- * `TOPG`: Turnovers per game.
- 
- * `PFPG`:  Personal fouls per game.
- 
- * `PER`:  Player Efficiency Rating (available since the 1951-52 season); PER is a rating developed by ESPN.com columnist John Hollinger. In John's words, "The PER sums up all a player's positive accomplishments, subtracts the negative accomplishments, and returns a per-minute rating of a player's performance."  
- 
- * `TS.`: TS%, True Shooting Percentage, a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.   
-
-<!-- *`X3PAr`:  3-Point Field Goal Attempts (available since the 1979-80 season in the NBA). -->
-  
- * `USG.`: Usage Percentage (available since the 1977-78 season in the NBA). Usage percentage is an estimate of the percentage of team plays used by a player while he was on the floor.   
-   
- * `WS`: an estimate of the number of wins contributed by a player.      
-   
- * `VORP`: Value Over Replacement Player (available since the 1973-74 season in the NBA); a box score estimate of the points per 100 TEAM possessions that a player contributed above a replacement-level (-2.0) player, translated to an average team and prorated to an 82-game season   
-   
- * `FG.`: Field Goal Percentage. 
- 
- * `X2P.`: 2-Point Field Goal Percentage.  
- 
- * `X3P.`: 3-Point Field Goal Percentage (available since the 1979-80 season in the NBA).   
- 
- <!-- *`X3PA`: 3-Point Field Goal Attempts (available since the 1979-80 season in the NBA).      -->
+Reading the required datasets
 ```{r}
+library("readxl")
 
+season_stats <-read.csv("Seasons_Stats.csv") 
+salaries <- data.frame(read_excel("Player - Salaries per Year (1990 - 2017).xlsx"))
 ```
+
+That amount of data is too big for the purpose of this analysis, so we will reduce the dimensions of both datasets. We join both datasets to get a full dataset with player stats and salaries. After that, we select only the data from the 2016-17 season. We will also use the salaries of the 2017-18 season.
+
+The remaining data will not be considered in the main analyses, though in the last section, it will be used to make some visualizations.
+
+```{r}
+# remove blanl & blank2: empty variables
+season_stats <- season_stats %>% select(-c(blanl, blank2))
+```
+
+
+
+We now restrict the datasets to the 2016-17 season, as it is the one which has more interest to our analysis (we want to study the statistics for the las available season, that is, 2016-17).
+
+```{r}
+# year 2017: season 16_17
+salaries_2017 <- salaries %>% filter(Season.End==2017)
+season_stats_2017 <- season_stats %>% filter(Year==2017)
+# update the levels in the subset 2017
+#stats
+season_stats_2017$Pos <- factor(season_stats_2017$Pos)
+season_stats_2017$Player <- factor(season_stats_2017$Player)
+season_stats_2017$Tm <- factor(season_stats_2017$Tm)
+#salaries
+salaries_2017$Player.Name <- factor(salaries_2017$Player.Name)
+salaries_2017$Team <- factor(salaries_2017$Team)
+# update and match the levels on both teams
+salaries_2017$Team <- revalue(salaries_2017$Team, c("CHA"="CHO", "NJN"="BRK", "NOH" = "NOP"))
+```
+
+Zeroes and NAs handling
+
+We start with the NA handling for both datasets. The salaries_2017 dataset doesn't contain any null value, as it is shown below.
+
+```{r}
+View(salaries_2017 %>%
+  select(everything()) %>%  
+  summarise_all(funs(sum(is.na(.)))))
+```
+
+```{r}
+#drop values with NA values in FT.
+season_stats_2017<- season_stats_2017 %>% drop_na(FT.)
+```
+
+Let us see how many NAs are still present on the dataset:
+
+```{r}
+View(season_stats_2017 %>%
+  select(everything()) %>%  
+  summarise_all(funs(sum(is.na(.)))))
+```
+
+We will see which are the samples with NAs in `X2p.`
+
+```{r}
+# check X2P.
+View(season_stats_2017 %>% 
+  filter(is.na(X2P.) == TRUE) %>% 
+  select(c("Player", "Tm", "Pos", "G", "MP")) %>%
+  arrange(desc(G)))
+```
+
+It is just one player who didn't play many minutes, so we will drop this sample from the dataset.
+```{r}
+# drop the sample
+season_stats_2017<- season_stats_2017 %>% 
+  drop_na(X2P.)
+```
+
+
+Next, we deal with the imputation of the NAs values of the variable `X3P.`.
+
+```{r}
+View(season_stats_2017 %>% 
+  filter(is.na(X3P.) == TRUE) %>% 
+  select(c("Player", "Tm", "Pos", "G", "MP", "X3P", "X3PA")) %>%
+  arrange(desc(X3P)) %>%
+  head(n=10))
+```
+
+
+We see that those values are empties because those players did not shoot any 3-pointer through the entire season. Thus, it would make sense not to consider the variable for them. 
+To simplify the analysis, we can imput the value 0. If they didn't shoot any 3, they probably would have a bad percentage anyway.
+
+```{r}
+#replace NAs by 0
+season_stats_2017 <- season_stats_2017 %>% 
+  mutate(X3P. = replace_na(X3P., 0) )
+##check the results on two of the players
+View(season_stats_2017 %>% 
+  filter(Player %in% c("Clint Capela", "Hassan Whiteside")) %>% 
+  select(c(Player, X3P. )))
+```
+
+Computing Per Game statistics
+
+We will compute some basic per game statistics that are not included in the `season_stats` dataset, namely, points per game (PPG), assiste per game (APG), rebounds per game (RPG), blocks per game (BPG), steals per game (SPG), turnovers per game (TOPG), personal fouls per game (PFPG) and minutes per game (MPG). Those variables will be used in the following analyses and are more convenient to understand them and to compare the values of the different players.
+
+```{r}
+season_stats_2017 <- season_stats_2017 %>%
+  mutate(PPG = PTS/G, APG = AST/G, RPG = TRB/G, 
+         BPG = BLK/G, SPG = STL/G, MPG = MP/G, 
+         TOPG = TOV/G, PFPG = PF/G ) 
+```
+
+
+Join the two tables
+Finally, we can create the table that resulsts from the union of the stats of 2017 table and the 2017 salaries.
+
+```{r}
+# join stats with salaries: join by player and team to avoid duplicities of players
+salaries_2017_join <- salaries_2017 %>% 
+  select(c(Player.Name, Team, Salary.in..))
+stats_with_salaries <- inner_join(season_stats_2017, salaries_2017_join,
+                                  by = c('Player' = 'Player.Name', "Tm"="Team"))
+View(head(stats_with_salaries))
+```
+
+Now let us analyze if there were any NAs created with this process.
+
+```{r}
+View(stats_with_salaries %>%
+  select(everything()) %>%  
+  summarise_all(funs(sum(is.na(.)))))
+```
+
+We see that no null values were introduced.
+
+Subset selection
+
+After cleaning the data, we will select a subset of all the variables, with which we will continue the analysis.
+Nevertheless, the data cleaning made in the previous section can be useful for further analyses on the dataset.
+
+```{r}
+subset <- stats_with_salaries %>%
+  select(c(Player,Tm, Pos, Age,  G, GS, MPG, PPG, APG, RPG, BPG,
+           SPG, TOPG, PFPG, WS, PER, VORP, X2P., X3P., FG., TS., 
+           USG., Salary.in.. ) )
+# variables that we will keep
+names(subset)
+```
+
+Checking for Outliers
+
+Now we can check for outliers on every variable of the previously selected ones.
+
+```{r}
+boxplot.stats(subset$Age)$out
+boxplot.stats(subset$G)$out
+boxplot.stats(subset$MPG)$out
+boxplot.stats(subset$PPG)$out
+boxplot.stats(subset$APG)$out
+boxplot.stats(subset$RPG)$out
+boxplot.stats(subset$BPG)$out
+boxplot.stats(subset$SPG)$out
+boxplot.stats(subset$TOPG)$out
+boxplot.stats(subset$PFPG)$out
+boxplot.stats(subset$WS)$out
+boxplot.stats(subset$PER)$out
+boxplot.stats(subset$VORP)$out
+boxplot.stats(subset$X2P.)$out
+boxplot.stats(subset$X3P.)$out
+boxplot.stats(subset$FG.)$out
+boxplot.stats(subset$TS.)$out
+boxplot.stats(subset$USG.)$out
+boxplot.stats(subset$Salary.in..)$out
+```
+
+We see that all of them correspond to values that actually correspond to real players. That means that they are values that the players can achieve,
+so we won't remove those outliers.
+
+
+Exploratory analysis
+
+Let us explore the players with the highest values of some of the statistics: MPG, PPG, APG, RPG, TOPG, PFPG and Salary. We will output the 10 players with the higher values for the statistics.
+
+MPG 
+
+```{r}
+# MPG
+View(subset %>% 
+  select(c(Player, Pos, MPG )) %>% 
+  arrange(desc(MPG)) %>% 
+  head (n=10))
+```
+
+PPG
+
+```{r}
+# PPG
+View(subset %>% 
+  select(c(Player, Pos, PPG )) %>% 
+  arrange(desc(PPG)) %>% 
+  head (n=10))
+```
+
+APG
+
+```{r}
+# APG
+View(subset %>% 
+  select(c(Player, Pos, APG )) %>% 
+  arrange(desc(APG)) %>% 
+  head (n=10))
+```
+
+RPG
+
+```{r}
+# RPG
+View(subset %>% 
+  select(c(Player, Pos, RPG )) %>% 
+  arrange(desc(RPG)) %>% 
+  head (n=10))
+```
+
+TOPG
+
+```{r}
+# TOPG
+View(subset %>% 
+  select(c(Player, Pos, TOPG )) %>% 
+  arrange(desc(TOPG)) %>% 
+  head (n=10))
+```
+
+PFPG
+```{r}
+# PFPG
+View(subset %>% 
+  select(c(Player, Pos, PFPG)) %>% 
+  arrange(desc(PFPG)) %>% 
+  head (n=10))
+```
+
+Salary
+
+```{r}
+# Salary
+View(subset %>% 
+  select(c(Player, Pos, Salary.in.. )) %>% 
+  arrange(desc(Salary.in..)) %>% 
+  head (n=10))
+```
+
+Are the Win Shares the factor that is more correlated to the salary of a player?
+
+We start with the hypothesis that whe Win Shares (WS) is the factor that contributes the most to a player's salary. Let's see if that hypothesis is true. 
+
+If not, we will examine some other factors to determine which is the one more related to the salary of a player.
+
+First, let's check who are the 30 players with the higher WS and see how much they are getting paid
+
+```{r}
+# 30 players with higher WS
+View(subset %>% 
+  select(c(Player, Tm, Pos,  WS,  Salary.in.. )) %>%
+  arrange(desc(WS)) %>%
+  head(n=30))
+```
+
+As a curiosity, let's calculate the Win shares for the teams:
+
+```{r}
+#teams with more WS
+View(stats_with_salaries %>%
+  group_by(Tm) %>%
+  summarise( sum_WS = sum(WS), sum_salary = sum(Salary.in..)) %>%
+  select(c(Tm, sum_WS, sum_salary ))  %>%
+  arrange(desc(sum_WS)))
+```
+
+
+We see that it is almost identical to the number of victories of the team that season.
+
+```{r}
+# correlation: WS and Salary
+cor(stats_with_salaries$WS, stats_with_salaries$Salary.in.., method = 'spearman')
+```
+
+The result is a correlation of $0.58$. There is some positive correlation, but is not a great one. Let's check some other variables, to see if there is another one which is more positively correlated to the salary.
+
+```{r}
+subset1 <- stats_with_salaries %>% 
+  select(c(Player, Tm, Pos, Age, TS., WS, PER, G, 
+           PPG, APG, RPG, BPG, SPG, TOPG, MPG, Salary.in.. ))
+cor(subset1$Salary.in.., subset1[4:15], method="spearman")
+```
+
+We see that the variable that is more positively correlated to the salary is MPG, closely followed by PPG. 
+
+It can be concluded that, usually, the players that earn the most are also the ones that play more minutes per game and the ones that score more points per game. This makes sense, as if you have to spend more money on a certain player, you would expect him to ve valuable for the team and thus make him play more minutes and allow him to shoot more often. 
+
+The teams value more the points and the minutes, rather than some advanced metrics like the PER, or the True Shooting %. Nevertheless, the metric of Win Shares follows closely the PPG and MPG in correlation with salary.
+
+Let's compute the correlation between salaries and FG.(field goal %) to check if the players who are getting paid the most are also the ones who shoot more efficiently.
+
+```{r}
+cor.test(subset$FG., subset$Salary.in.., method = 'spearman')
+```
+
+The correlation is not so high, so being an efficient scorer seems not to be highly correlated with a higher salary.
+
+Is there any significant difference in any of the main statistics for the different five positions of the game?
+
+Let's check if there are any differences in some of the different stats for the five player positions. If any differences are found, We will perform different statistical tests to check if those differences are significant or not.
+
+```{r}
+subset2 <- stats_with_salaries %>% 
+  select(c(Player, Tm, Pos, Age, WS, PPG, APG, MPG, Salary.in.. ))
+```
+
+We select the five analysis groups, i.e., the five types of players in the game. 
+Let us see a sample of these groups.
 

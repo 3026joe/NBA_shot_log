@@ -847,12 +847,6 @@ Let us create different models and compare their adjusted R-squared as an indica
 
 Let us first use a model which uses all the variables in the subset. Let us display the summary and make some comments about it.
 
-```{r}
-# all variables
-model1 <- lm(Salary.in.. ~ ., 
-             data=subset3)
-summary(model1)
-```
 
 We see that some of the variables that seem to explain better the salary are the Position, the Games Started, PPG, RPG and PFPG.
 
@@ -948,11 +942,16 @@ It seems that the variables whose correlation is more clear with the salary are 
 Let us build some more linear regression models. Then, we will select the better performing one.
 
 ```{r}
+model1 <- lm(Salary.in.. ~ ., 
+             data=subset3)
+summary(model1)
+```
+
+```{r}
 model2 <- lm(Salary.in.. ~ APG + RPG + PPG + Age + BPG + MPG*PPG 
              + Age*MPG, 
              data=subset3)
 ```
-
 
 ```{r}
 model3 <- lm(Salary.in.. ~ MPG +  RPG + Age + BPG + MPG*PPG + Age*MPG,
@@ -970,7 +969,6 @@ model5 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+ Age*MPG +
                Pos + RPG + TS. + GS + APG*TOPG+ USG.,
              data=subset3)
 ```
-
 
 ```{r}
 model6 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+  I(PFPG)^2+ 
@@ -1210,7 +1208,7 @@ salaries_by_team %>%
 
 
 ## Was there an evolution in the number of three point attempts through the NBA history?
-```{r,message=FALSE, warning=FALSE}
+```{r}
 ## evolution of 3pts attemps though the years------------------------
 # group 3 pts by year :after 1982, when first collected data
 threes_att_by_year <- season_stats %>% filter(Year>1982) %>%
@@ -1223,9 +1221,8 @@ threes_att_by_year %>% ggplot(aes(Year, total)) +
   #geom_bar(stat = "identity") + 
   scale_y_continuous(breaks = c(20000, 40000,
                                 60000, 80000))+  
-  ggtitle('Evolution in three pointes attempted by year') +
+  ggtitle('Evolution in three pointers attempted by year') +
   theme_classic()+
-  labs(subtitle = "The overall tendence is an increase in the number of attempts")+
   ylab('Total 3pt attempts')
 ```
 

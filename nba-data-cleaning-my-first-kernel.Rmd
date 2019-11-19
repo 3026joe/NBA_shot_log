@@ -1,6 +1,6 @@
 ---
-title: "Data cleaning project"
-author: "Ricard Trinchet Arnejo"
+title: "NBA Player Dataset"
+author: "Joseph Dominic"
 output:
     html_document:
         toc: yes
@@ -18,10 +18,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.pos = 'H', warning=FALSE)
 
 
 
-## packages
-
-These are the packages that will be needed in this project:
-
+## Packages
 
 ```{r ,message=FALSE, warning=FALSE}
 library(plyr)
@@ -36,12 +33,8 @@ library(gridExtra)
 
 
 
+## Reading datasets
 
-
-
-## Dataset load into R
-
-We upload the datasets into R.
 
 ```{r ,message=FALSE, warning=FALSE}
 library("readxl")
@@ -57,12 +50,9 @@ salaries <- data.frame(read_excel("Player - Salaries per Year (1990 - 2017).xlsx
 The first dataset has 24691 observations each one with 53 variables.
 The second one, contains 11837 observations of  7 variables.
 
-That amount of data is too big for the purpose of this analysis, so we will reduce the dimensions of both datasets. The idea is to join both datasets to get a full dataset with player stats and salaries. After that, we will select only the data from the 2016-17 season. We will also use the salaries of the 2017-18 season.
+We require only the data from the 2016-17 season, as the accuracy of stat recording is best for the most recent season, and the most relevant. We will also use the salaries of the 2017-18 season.
 
-The remaining data will not be considered in the main analyses, though in the last section, it will be used to make some visualizations.
-
-
-Also, some variable selection will be made. We will choose 23 of the variables from the first dataset and only one from the second.
+The remaining data will only be used for visualizations.
 
 The selected variables are the following. From the first dataset:
  <!-- * `X`: Number of column in the dataset   -->
@@ -78,7 +68,7 @@ The selected variables are the following. From the first dataset:
  
  * `G`: Games played by the player on that season.     
  
- * `GS`: Games started by the player on that season, i.e., games where the player was on the starting line-up.  
+ * `GS`: Games where the player was on the starting line-up.  
  
  * `MPG`: Minutes Played per game.  
  
@@ -98,15 +88,15 @@ The selected variables are the following. From the first dataset:
  
  * `PER`:  Player Efficiency Rating (available since the 1951-52 season); PER is a rating developed by ESPN.com columnist John Hollinger. In John's words, "The PER sums up all a player's positive accomplishments, subtracts the negative accomplishments, and returns a per-minute rating of a player's performance."  
  
- * `TS.`: TS%, True Shooting Percentage, a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.   
+ * `TS`: TS%, True Shooting Percentage, a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.   
 
 <!-- *`X3PAr`:  3-Point Field Goal Attempts (available since the 1979-80 season in the NBA). -->
   
- * `USG.`: Usage Percentage (available since the 1977-78 season in the NBA). Usage percentage is an estimate of the percentage of team plays used by a player while he was on the floor.   
+ * `USG`: Usage Percentage (available since the 1977-78 season in the NBA). Usage percentage is an estimate of the percentage of team plays used by a player while he was on the floor.   
    
  * `WS`: an estimate of the number of wins contributed by a player.      
    
- * `VORP`: Value Over Replacement Player (available since the 1973-74 season in the NBA); a box score estimate of the points per 100 TEAM possessions that a player contributed above a replacement-level (-2.0) player, translated to an average team and prorated to an 82-game season   
+ * `VORP`: Value Over Replacement Player (available since the 1973-74 season in the NBA); converts the Box Plus Minus rate into an estimate of each player's overall contribution to the team, measured vs. what a theoretical "replacement player" would provide, where the "replacement player" is defined as a player on minimum salary or not a normal member of a team's rotation. 
    
  * `FG.`: Field Goal Percentage. 
  
@@ -118,7 +108,7 @@ The selected variables are the following. From the first dataset:
    
    
     
-And from the second dataset: 
+From the second dataset: 
 
 * `Salary.in..`: The amount of money that the players gets for the season, in dollars.
 
@@ -129,28 +119,22 @@ And from the second dataset:
 
 There are three main questions that we would like to answer:
 
-* Are the Win Shares the factor that is more correlated to the salary of a player? 
+* Are the Win Shares the most correlated to the salary of a player?
 
-* Is there any significant difference in any of the main statistics for the different five positions of the game? 
+* Is there any significant difference in any of the main statistics between positions of the game? 
 
 * Can the players' salaries be predicted?
 
-To answer these questions, we will work with the data from the 2016-17 season, as it is the last for which there is data on both salaries and in-game stats.
-
-Furthermore, we try to answer some small questions with the help of some plots. The questions that we pose are the following:
-
 * How did the number of points scored evolved through the years?
 
-* Which teams are the ones which expent the most on salaries? Were they successfull teams?  
+ <!--* Which teams are the ones which expent the most on salaries? Were they successfull teams? -->
 * Was there any change in the number of three points attempts in the history of the league?  
 
 # Data cleaning
 
-
-We start with some basic cleaning of the datasets. First, let us remove two variables that are empty and will not be used.
+First, we removed 2 blank variables.
 
 ```{r}
-# remove blanl & blank2: empty variables
 season_stats <- season_stats %>% select(-c(blanl, blank2))
 ```
 
@@ -177,7 +161,7 @@ salaries_2017$Team <- revalue(salaries_2017$Team, c("CHA"="CHO", "NJN"="BRK", "N
 
 ## Zeroes and NAs handling
 
-We start with the NA handling for both datasets. The salaries_2017 dataset doesn't contain any null value, as it is shown below.
+The salaries_2017 dataset doesn't contain any null value, as shown below.
 
 ```{r}
 View(salaries_2017 %>%

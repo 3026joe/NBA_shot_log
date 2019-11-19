@@ -178,7 +178,7 @@ View(season_stats_2017 %>%
   summarise_all(funs(sum(is.na(.)))))
 ```
 
-Now we should think if those values should be imputed or else if we can drop them from the dataset.
+Now we should think if those values should be assigned or else if we can drop them from the dataset.
 Let us examine those samples which have some missing values and then decide what is more suitable for each case.
 
 ```{r}
@@ -197,9 +197,9 @@ View(season_stats_2017 %>%
   head(n=10))
 ```
 
-While the first case is residual, as only players with few minutes played through the season appear, the second case is more important, as it contains some good overall players, like Capela or Whiteside, and others who logged a big number of minutes.
+The second case is important as it contains good players who played quite a few minutes.
 
-For the first case, we will drop the values and for the second we will impute them.
+For the first case, we will drop the values and for the second we will replace them.
 
 ```{r}
 #drop values with NA values in FT.
@@ -233,7 +233,7 @@ season_stats_2017<- season_stats_2017 %>%
 ```
 
 
-Next, we deal with the imputation of the NAs values of the variable `X3P.`.
+Next, we replace the NAs in  `X3P.`.
 
 ```{r}
 View(season_stats_2017 %>% 
@@ -244,8 +244,7 @@ View(season_stats_2017 %>%
 ```
 
 
-We see that those values are empties because those players did not shoot any 3-pointer through the entire season. Thus, it would make sense not to consider the variable for them. 
-To simplify the analysis, we can imput the value 0. If they didn't shoot any 3, they probably would have a bad percentage anyway.
+These are players who didn't shoot any 3's, so we simply replace the value with 0.
 
 ```{r}
 #replace NAs by 0

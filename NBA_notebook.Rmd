@@ -657,16 +657,16 @@ salaries_by_team %>%
 
 Was there an evolution in the number of three point attempts through the NBA history?
 ```{r}
-## evolution of 3pts attemps though the years------------------------
+
 # group 3 pts by year :after 1982, when first collected data
+
 threes_att_by_year <- season_stats %>% filter(Year>1982) %>%
   group_by(Year) %>% 
   summarise(total = sum(X3PA))
 str(threes_att_by_year)
-# plot; geom_smooth options: method = "lm", se = FALSE
+
 threes_att_by_year %>% ggplot(aes(Year, total)) + 
   geom_point()+ geom_smooth()+ 
-  #geom_bar(stat = "identity") + 
   scale_y_continuous(breaks = c(20000, 40000,
                                 60000, 80000))+  
   ggtitle('Evolution in three pointers attempted by year') +

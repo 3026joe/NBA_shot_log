@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.pos = 'H', warning=FALSE)
 ## Packages
 
 ```{r ,message=FALSE, warning=FALSE}
-library(plyr)
+library(dplyr)
 library(tidyverse)
 library(knitr)
 library(ggthemes)

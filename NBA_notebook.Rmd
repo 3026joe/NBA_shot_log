@@ -1,6 +1,13 @@
 ---
 title: "R Notebook"
-output: html_notebook
+author: "Joseph Dominic"
+output:
+    html_document:
+        toc: yes
+        theme: spacelab
+        highlight: tango
+        df_print: paged
+        code_folding: hide
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 

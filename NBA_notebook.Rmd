@@ -9,10 +9,8 @@ output:
         code_folding: hide
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Importing the required libraries
-```{r}
+## Importing the required libraries
+```{r ,message=FALSE, warning=FALSE}
 library(plyr)
 library(tidyverse)
 library(knitr)
@@ -23,8 +21,8 @@ library(car)
 library(gridExtra)
 ```
 
-Reading the required datasets
-```{r}
+## Reading the required datasets
+```{r ,message=FALSE, warning=FALSE}
 library("readxl")
 
 season_stats <-read.csv("Seasons_Stats.csv") 
@@ -35,7 +33,7 @@ That amount of data is too big for the purpose of this analysis, so we will redu
 
 The remaining data will not be considered in the main analyses, though in the last section, it will be used to make some visualizations.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # remove blanl & blank2: empty variables
 season_stats <- season_stats %>% select(-c(blanl, blank2))
 ```
@@ -44,7 +42,7 @@ season_stats <- season_stats %>% select(-c(blanl, blank2))
 
 We now restrict the datasets to the 2016-17 season, as it is the one which has more interest to our analysis (we want to study the statistics for the las available season, that is, 2016-17).
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # year 2017: season 16_17
 salaries_2017 <- salaries %>% filter(Season.End==2017)
 season_stats_2017 <- season_stats %>% filter(Year==2017)
@@ -60,24 +58,24 @@ salaries_2017$Team <- factor(salaries_2017$Team)
 salaries_2017$Team <- revalue(salaries_2017$Team, c("CHA"="CHO", "NJN"="BRK", "NOH" = "NOP"))
 ```
 
-Zeroes and NAs handling
+## Zeroes and NAs handling
 
 We start with the NA handling for both datasets. The salaries_2017 dataset doesn't contain any null value, as it is shown below.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 View(salaries_2017 %>%
   select(everything()) %>%  
   summarise_all(funs(sum(is.na(.)))))
 ```
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 #drop values with NA values in FT.
 season_stats_2017<- season_stats_2017 %>% drop_na(FT.)
 ```
 
 Let us see how many NAs are still present on the dataset:
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 View(season_stats_2017 %>%
   select(everything()) %>%  
   summarise_all(funs(sum(is.na(.)))))
@@ -85,7 +83,7 @@ View(season_stats_2017 %>%
 
 We will see which are the samples with NAs in `X2p.`
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # check X2P.
 View(season_stats_2017 %>% 
   filter(is.na(X2P.) == TRUE) %>% 
@@ -94,7 +92,7 @@ View(season_stats_2017 %>%
 ```
 
 It is just one player who didn't play many minutes, so we will drop this sample from the dataset.
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # drop the sample
 season_stats_2017<- season_stats_2017 %>% 
   drop_na(X2P.)
@@ -103,7 +101,7 @@ season_stats_2017<- season_stats_2017 %>%
 
 Next, we deal with the imputation of the NAs values of the variable `X3P.`.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 View(season_stats_2017 %>% 
   filter(is.na(X3P.) == TRUE) %>% 
   select(c("Player", "Tm", "Pos", "G", "MP", "X3P", "X3PA")) %>%
@@ -115,7 +113,7 @@ View(season_stats_2017 %>%
 We see that those values are empties because those players did not shoot any 3-pointer through the entire season. Thus, it would make sense not to consider the variable for them. 
 To simplify the analysis, we can imput the value 0. If they didn't shoot any 3, they probably would have a bad percentage anyway.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 #replace NAs by 0
 season_stats_2017 <- season_stats_2017 %>% 
   mutate(X3P. = replace_na(X3P., 0) )
@@ -125,11 +123,11 @@ View(season_stats_2017 %>%
   select(c(Player, X3P. )))
 ```
 
-Computing Per Game statistics
+## Computing Per Game statistics
 
 We will compute some basic per game statistics that are not included in the `season_stats` dataset, namely, points per game (PPG), assiste per game (APG), rebounds per game (RPG), blocks per game (BPG), steals per game (SPG), turnovers per game (TOPG), personal fouls per game (PFPG) and minutes per game (MPG). Those variables will be used in the following analyses and are more convenient to understand them and to compare the values of the different players.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 season_stats_2017 <- season_stats_2017 %>%
   mutate(PPG = PTS/G, APG = AST/G, RPG = TRB/G, 
          BPG = BLK/G, SPG = STL/G, MPG = MP/G, 
@@ -140,7 +138,7 @@ season_stats_2017 <- season_stats_2017 %>%
 Join the two tables
 Finally, we can create the table that resulsts from the union of the stats of 2017 table and the 2017 salaries.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # join stats with salaries: join by player and team to avoid duplicities of players
 salaries_2017_join <- salaries_2017 %>% 
   select(c(Player.Name, Team, Salary.in..))
@@ -151,7 +149,7 @@ View(head(stats_with_salaries))
 
 Now let us analyze if there were any NAs created with this process.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 View(stats_with_salaries %>%
   select(everything()) %>%  
   summarise_all(funs(sum(is.na(.)))))
@@ -159,12 +157,12 @@ View(stats_with_salaries %>%
 
 We see that no null values were introduced.
 
-Subset selection
+## Subset selection
 
 After cleaning the data, we will select a subset of all the variables, with which we will continue the analysis.
 Nevertheless, the data cleaning made in the previous section can be useful for further analyses on the dataset.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset <- stats_with_salaries %>%
   select(c(Player,Tm, Pos, Age,  G, GS, MPG, PPG, APG, RPG, BPG,
            SPG, TOPG, PFPG, WS, PER, VORP, X2P., X3P., FG., TS., 
@@ -173,11 +171,11 @@ subset <- stats_with_salaries %>%
 names(subset)
 ```
 
-Checking for Outliers
+# Checking for Outliers
 
 Now we can check for outliers on every variable of the previously selected ones.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 boxplot.stats(subset$Age)$out
 boxplot.stats(subset$G)$out
 boxplot.stats(subset$MPG)$out
@@ -203,13 +201,13 @@ We see that all of them correspond to values that actually correspond to real pl
 so we won't remove those outliers.
 
 
-Exploratory analysis
+# Exploratory analysis
 
 Let us explore the players with the highest values of some of the statistics: MPG, PPG, APG, RPG, TOPG, PFPG and Salary. We will output the 10 players with the higher values for the statistics.
 
-MPG 
+## MPG 
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # MPG
 View(subset %>% 
   select(c(Player, Pos, MPG )) %>% 
@@ -217,9 +215,9 @@ View(subset %>%
   head (n=10))
 ```
 
-PPG
+## PPG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # PPG
 View(subset %>% 
   select(c(Player, Pos, PPG )) %>% 
@@ -227,9 +225,9 @@ View(subset %>%
   head (n=10))
 ```
 
-APG
+## APG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # APG
 View(subset %>% 
   select(c(Player, Pos, APG )) %>% 
@@ -237,9 +235,9 @@ View(subset %>%
   head (n=10))
 ```
 
-RPG
+## RPG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # RPG
 View(subset %>% 
   select(c(Player, Pos, RPG )) %>% 
@@ -247,9 +245,9 @@ View(subset %>%
   head (n=10))
 ```
 
-TOPG
+## TOPG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # TOPG
 View(subset %>% 
   select(c(Player, Pos, TOPG )) %>% 
@@ -257,8 +255,8 @@ View(subset %>%
   head (n=10))
 ```
 
-PFPG
-```{r}
+## PFPG
+```{r ,message=FALSE, warning=FALSE}
 # PFPG
 View(subset %>% 
   select(c(Player, Pos, PFPG)) %>% 
@@ -266,9 +264,9 @@ View(subset %>%
   head (n=10))
 ```
 
-Salary
+## Salary
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # Salary
 View(subset %>% 
   select(c(Player, Pos, Salary.in.. )) %>% 
@@ -284,7 +282,7 @@ If not, we will examine some other factors to determine which is the one more re
 
 First, let's check who are the 30 players with the higher WS and see how much they are getting paid
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # 30 players with higher WS
 View(subset %>% 
   select(c(Player, Tm, Pos,  WS,  Salary.in.. )) %>%
@@ -294,7 +292,7 @@ View(subset %>%
 
 As a curiosity, let's calculate the Win shares for the teams:
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 #teams with more WS
 View(stats_with_salaries %>%
   group_by(Tm) %>%
@@ -306,14 +304,14 @@ View(stats_with_salaries %>%
 
 We see that it is almost identical to the number of victories of the team that season.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # correlation: WS and Salary
 cor(stats_with_salaries$WS, stats_with_salaries$Salary.in.., method = 'spearman')
 ```
 
 The result is a correlation of $0.58$. There is some positive correlation, but is not a great one. Let's check some other variables, to see if there is another one which is more positively correlated to the salary.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset1 <- stats_with_salaries %>% 
   select(c(Player, Tm, Pos, Age, TS., WS, PER, G, 
            PPG, APG, RPG, BPG, SPG, TOPG, MPG, Salary.in.. ))
@@ -328,7 +326,7 @@ The teams value more the points and the minutes, rather than some advanced metri
 
 Let's compute the correlation between salaries and FG.(field goal %) to check if the players who are getting paid the most are also the ones who shoot more efficiently.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 cor.test(subset$FG., subset$Salary.in.., method = 'spearman')
 ```
 
@@ -338,7 +336,7 @@ Is there any significant difference in any of the main statistics for the differ
 
 Let's check if there are any differences in some of the different stats for the five player positions. If any differences are found, We will perform different statistical tests to check if those differences are significant or not.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset2 <- stats_with_salaries %>% 
   select(c(Player, Tm, Pos, Age, WS, PPG, APG, MPG, Salary.in.. ))
 ```
@@ -346,41 +344,41 @@ subset2 <- stats_with_salaries %>%
 We select the five analysis groups, i.e., the five types of players in the game. 
 Let us see a sample of these groups.
 
-PG
-```{r}
+## PG
+```{r ,message=FALSE, warning=FALSE}
 group.PG <- subset2 %>%  filter(Pos == 'PG')
 View(head(group.PG))
 ```
 
-SG
+## SG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 group.SG <- subset2 %>%  filter(Pos == 'SG')
 View(head(group.SG))
 ```
 
-SF
+## SF
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 group.SF <- subset2 %>%  filter(Pos == 'SF')
 View(head(group.SF))
 ```
 
-PF
+## PF
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 group.PF <- subset2 %>%  filter(Pos == 'PF')
 View(head(group.PF))
 ```
 
-C
+## C
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 group.C <- subset2 %>%  filter(Pos == 'C')
 View(head(group.C))
 ```
 
-Analysis planning
+# Analysis planning
 
 We are going to study if there are any significant differences in the following variables, depending on the position of the player:
 
@@ -393,27 +391,27 @@ We are going to study if there are any significant differences in the following 
 
 Comparing stats for different positions
 
-WS
+## WS
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset2 %>% 
   ggplot(aes(x = Pos, y = WS)) + 
   geom_boxplot()+
   theme_classic()
 ```
 
-APG
+## APG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset2 %>% 
   ggplot(aes(x = Pos , y = APG)) + 
   geom_boxplot()+
   theme_classic()
 ```
 
-MPG
+## MPG
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset2 %>% 
   ggplot(aes(x = Pos, y = MPG)) + 
   geom_boxplot()+
@@ -422,29 +420,29 @@ subset2 %>%
 
 It seems that the Small Forwards are getting more minutes per game. Let us see how many players are in the league for every position in the 2016-17 season.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 summary(subset$Pos)
 ```
 
 We see that the SF is the position with less players, which can be the reason that is the position with the higher MPG.
 
 
-Salary prediction model
+# Salary prediction model
 
 We are going to use the following subset of variables to predict the salary:
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 subset3 <- subset %>%
   select(-c(Tm, Player))
 names(subset3)
 ```
 
-Models creation
+## Models creation
 Let us create different models and compare their adjusted R-squared as an indicator of which model will make a better adjustment to the data.
 
 Let us first use a model which uses all the variables in the subset. Let us display the summary and make some comments about it.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 #All variables
 model1 <- lm(Salary.in.. ~ ., 
              data=subset3)
@@ -455,7 +453,7 @@ We see that some of the variables that seem to explain better the salary are the
 
 Let us create a plot to see how the variables with the most significant p-value from the previous output (those are: PPG, MPG, RPG, GS, PFPG and AGE) are related to the Salary.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # Salary vs PPG
 p1 <- ggplot(subset, aes(x=Salary.in.., y=PPG)) +
   geom_point(alpha=0.5) + geom_smooth() +
@@ -544,36 +542,36 @@ It seems that the variables whose correlation is more clear with the salary are 
 
 Let us build some more linear regression models. Then, we will select the better performing one.
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 model2 <- lm(Salary.in.. ~ APG + RPG + PPG + Age + BPG + MPG*PPG 
              + Age*MPG, 
              data=subset3)
 ```
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 model3 <- lm(Salary.in.. ~ MPG +  RPG + Age + BPG + MPG*PPG + Age*MPG,
              data=subset3)
 ```
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 model4 <- lm(Salary.in.. ~  Age*MPG + WS + TOPG + PFPG + GS,
              data=subset3)
 ```
 
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 model5 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+ Age*MPG +
                Pos + RPG + TS. + GS + APG*TOPG+ USG.,
              data=subset3)
 ```
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 model6 <- lm(Salary.in.. ~  I(Age)^2 + I(PPG)^3+  I(PFPG)^2+ 
                Age*MPG + Pos + I(RPG)^2 + TS. + I(GS)^2 + APG*TOPG+ 
                USG.*TOPG + VORP + WS, data=subset3)
 ```
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 models.table <- 
   data.frame(c(1, 2, 3 ,4 ,5, 6),
                            c(summary(model1)$adj.r.squared,
@@ -595,14 +593,14 @@ View(models.table)
 
 It seems that the model number 6 has the highest adjusted R-squared, so that is the one that we will use.
 
-Data visualizations
+# Data visualizations
 
 In this section, some data visualizations are included, aiming to answer some small questions about the evolution of the league in the last years.
 
 
 ## How many points were scored each season through the NBA history?
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 # group points by year
 points_by_year <- season_stats %>% 
   group_by(Year) %>% 
@@ -624,9 +622,9 @@ points_by_year %>%
   ylab("Total points scored per season (in thousand points)")
 ```
 
-Which are the teams that spent the most money on players' salaries?
+## Which are the teams that spent the most money on players' salaries?
 
-```{r}
+```{r ,message=FALSE, warning=FALSE}
 ### averaged salaries grouped by teams -----------
 library(tidyverse)
 champions_list <- c("LAL", "CLE", "DET", "GSW", "BOS", 
@@ -655,8 +653,8 @@ salaries_by_team %>%
                      
 ```
 
-Was there an evolution in the number of three point attempts through the NBA history?
-```{r}
+## Was there an evolution in the number of three point attempts through the NBA history?
+```{r ,message=FALSE, warning=FALSE}
 
 # group 3 pts by year :after 1982, when first collected data
 
